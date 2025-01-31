@@ -85,9 +85,15 @@ def validar_cliente(deal_id):
         return re.sub(r"[-]", "", cep) if cep else ""
 
     def extrair_telefone(numero_completo):
+
+        if not numero_completo.startswith("+55"):
+            numero_completo = "+55" + numero_completo
+
+    
         padrao = re.match(r"\+55(\d{2})(\d{8,9})", numero_completo)  
         if padrao:
             return padrao.group(1), padrao.group(2)  
+    
         return "", ""
 
     telefone_completo = deal_data.get("UF_CRM_1698698407472", "")
