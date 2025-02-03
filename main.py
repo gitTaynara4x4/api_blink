@@ -21,6 +21,8 @@ WEBHOOK_URL_BITRIX = f"{BITRIX_API_URL}"
 WEBHOOK_URL_BLINK = f"{BLINKCONECTA_API_URL}"
 AUTH = f"{BLINKCONECTA_AUTH}"
 
+
+
 # Rota para atualizar viabilidade
 @app.route("/api/atualizar_viabilidade/deal_id=<int:deal_id>", methods=["POST"])
 def atualizar_viabilidade(deal_id):
@@ -114,7 +116,9 @@ def validar_cliente(deal_id):
         "cidadeInstalacao": deal_data.get("UF_CRM_1731588487", ""),
         "enderecoInstalacao": deal_data.get("UF_CRM_1698688252221", ""),
         "numeroInstalacao": deal_data.get("UF_CRM_1700661252544", ""),
-        "idPacote": 110  
+        "idPacote": 110 ,
+        "idTipoMidia": 106,
+        "idVendedor": 26
     }
 
     headers = {
@@ -128,12 +132,22 @@ def validar_cliente(deal_id):
     if blink_response.status_code != 200:
         return jsonify({"error": "Erro na validação do cliente", "details": blink_response.text}), 500
 
-    pendencias_financeiras = blink_response.json().get("values", {}).get("serasa_ocorrencias", {}).get("Pendencias Financeiras", {}).get("valor", {})
-    pendencias_internas = blink_response.json().get("values", {}).get("serasa_ocorrencias", {}).get("Pendencias Internas", {}).get("valor", {})
-    protestos_do_estado = blink_response.json().get("values", {}).get("serasa_ocorrencias", {}).get("Protestos do Estado", {}).get("valor", {})
-    cheques_sem_fundos = blink_response.json().get("values", {}).get("serasa_ocorrencias", {}).get("Cheques Sem Fundos Bacen", {}).get("valor", {})
-    status_aprovacao = blink_response.json().get("values", {}).get("status_aprovacao", {})
+    blinkvalue = blink_response.json().get("values", {})
 
+
+    pendencias_financeiras = blinkvalue.get("serasa_ocorrencias", {}).get("Pendencias Financeiras", {}).get("valor", {})
+    score = blinkvalue.get("serasa_score", {})
+    pendencias_internas = blinkvalue.get("serasa_ocorrencias", {}).get("Pendencias Internas", {}).get("valor", {})
+    protestos_do_estado = blinkvalue.get("serasa_ocorrencias", {}).get("Protestos do Estado", {}).get("valor", {})
+    cheques_sem_fundos = blinkvalue.get("serasa_ocorrencias", {}).get("Cheques Sem Fundos Bacen", {}).get("valor", {})
+    status_aprovacao = blinkvalue.get("status_aprovacao", {})
+    comprovante_komunicar = blinkvalue.get("tipo_midia", {})
+    comprovante_vendedor = blinkvalue.get("vendedor", {})
+
+    print(pendencias_internas)
+    print(pendencias_financeiras)
+
+    
     if isinstance(pendencias_financeiras, float):
         pendencias_financeiras = str(pendencias_financeiras)
     if isinstance(pendencias_internas, float):
@@ -144,16 +158,28 @@ def validar_cliente(deal_id):
         cheques_sem_fundos = str(cheques_sem_fundos)
     if isinstance(status_aprovacao, float):
         status_aprovacao = str(status_aprovacao)
+    if isinstance(score, float):
+        score = str(score)
+    if isinstance(comprovante_komunicar, float):
+        score = str(comprovante_komunicar)
+    if isinstance(comprovante_vendedor, float):
+        score = str(comprovante_vendedor)    
+
 
     update_payload = {
         "id": deal_id,
         "fields": {
-            "UF_CRM_1738270468": f"Pendencias Financeiras: {pendencias_financeiras.upper()} "
-                                f"Pendencias Internas: {pendencias_internas.upper()} "
-                                f"Protestos do Estado: {protestos_do_estado.upper()} "
-                                f"Cheques sem fundos: {cheques_sem_fundos.upper()}",
+            "UF_CRM_1738270468": f"Pendencias Financeiras: {pendencias_financeiras.upper() if pendencias_financeiras else "0"} "
+                                f"Pendencias Internas: {pendencias_internas.upper() if pendencias_internas else "0"} "
+                                f"Protestos do Estado: {protestos_do_estado.upper() if protestos_do_estado else "0" } "
+                                f"Cheques sem fundos: {cheques_sem_fundos.upper() if cheques_sem_fundos else "0" } ",
 
-            "UF_CRM_1738270439": status_aprovacao.upper()
+            "UF_CRM_1738270439": f"Status Aprovação: {status_aprovacao.upper()} "
+                                f": {score} ",
+
+            "UF_CRM_1738599835": f"Tipo de Imagem: {comprovante_komunicar.upper()} "
+                                f"Vendedor: {comprovante_vendedor.upper()} "
+
         }
     }
 
