@@ -169,10 +169,10 @@ def validar_cliente(deal_id):
     update_payload = {
         "id": deal_id,
         "fields": {
-            "UF_CRM_1738270468": f"Pendencias Financeiras: {pendencias_financeiras.upper() if pendencias_financeiras else 0} "
-                                f"Pendencias Internas: {pendencias_internas.upper() if pendencias_internas else 0} "
-                                f"Protestos do Estado: {protestos_do_estado.upper() if protestos_do_estado else 0 } "
-                                f"Cheques sem fundos: {cheques_sem_fundos.upper() if cheques_sem_fundos else 0 } ",
+            "UF_CRM_1738270468": f"Pendencias Financeiras: {pendencias_financeiras.upper() if pendencias_financeiras else '0'} "
+                                f"Pendencias Internas: {pendencias_internas.upper() if pendencias_internas else '0'} "
+                                f"Protestos do Estado: {protestos_do_estado.upper() if protestos_do_estado else '0' } "
+                                f"Cheques sem fundos: {cheques_sem_fundos.upper() if cheques_sem_fundos else '0' } ",
 
             "UF_CRM_1738270439": f"Status Aprovação: {status_aprovacao.upper()} "
                                 f": {score} ",
