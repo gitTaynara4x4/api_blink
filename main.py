@@ -32,7 +32,7 @@ def atualizar_viabilidade(deal_id):
         return jsonify({"error": "Erro ao obter dados do Bitrix24", "details": bitrix_response.text}), 500
     
     deal_data = bitrix_response.json().get("result", {})
-    
+
     dados = {
         "cidade": deal_data.get("UF_CRM_1731588487", ""),
         "bairro": deal_data.get("UF_CRM_1700661287551", ""),
@@ -42,23 +42,43 @@ def atualizar_viabilidade(deal_id):
     
     headers = {"Authorization": BLINKCONECTA_AUTH, "User-Agent": "Mozilla/5.0"}
     viabilidade_response = requests.get(BLINKCONECTA_API_URL, headers=headers, params=dados)
-    
+
     if viabilidade_response.status_code != 200:
         return jsonify({"error": "Erro na consulta de viabilidade", "details": viabilidade_response.text}), 500
     
     viabilidade_data = viabilidade_response.json().get("values", {})
-    
+
     status_viabilidade = viabilidade_data.get("status_viabilidade", "")
     descricao = viabilidade_data.get("descricao", "")
-    campo_viabilidade = f"Status: {status_viabilidade}\nDescrição: {descricao}"
+
+    # Definir a mensagem de retorno com base no status
+    if status_viabilidade.lower() == "inviavel":
+        mensagem_orientacao = "Verifique os dados informados ou tente outro endereço."
+    elif status_viabilidade.lower() == "viavel":
+        mensagem_orientacao = "Viabilidade confirmada! Prossiga com o atendimento."
+    else:
+        mensagem_orientacao = "Sem conclusão definida. Consulte o suporte."
+
+    # Se houver um erro específico na validação dos dados
+    if "erros" in viabilidade_response.text:
+        detalhes_erro = viabilidade_response.json().get("details", {})
+        mensagem_orientacao = f"Erro de validação: {detalhes_erro}"
+
+    campo_viabilidade = f"Status: {status_viabilidade}\nDescrição: {descricao}\nAção: {mensagem_orientacao}"
     
     update_data = {"id": deal_id, "fields": {"UF_CRM_1738254914": campo_viabilidade}}
     update_response = requests.post(f"{WEBHOOK_URL_BITRIX}/crm.deal.update", json=update_data)
-    
+
     if update_response.status_code != 200:
         return jsonify({"error": "Erro ao atualizar campo no Bitrix24", "details": update_response.text}), 500
-    
-    return jsonify({"message": "Campo atualizado com sucesso no Bitrix24", "status_viabilidade": status_viabilidade, "descricao": descricao})
+
+    return jsonify({
+        "message": "Campo atualizado com sucesso no Bitrix24",
+        "status_viabilidade": status_viabilidade,
+        "descricao": descricao,
+        "orientacao": mensagem_orientacao
+    })
+
 
 # Rota para validar cliente
 @app.route("/api/validar_cliente/deal_id=<int:deal_id>", methods=["POST"])
