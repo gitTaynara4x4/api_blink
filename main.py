@@ -163,9 +163,11 @@ def validar_cliente(deal_id):
     status_aprovacao = blinkvalue.get("status_aprovacao", {})
     comprovante_komunicar = blinkvalue.get("tipo_midia", {})
     comprovante_vendedor = blinkvalue.get("vendedor", {})
+    id_oportunidade = blinkvalue.get("id_oportunidade", {})
 
     print(pendencias_internas)
     print(pendencias_financeiras)
+    print(id_oportunidade)
 
     
     if isinstance(pendencias_financeiras, float):
@@ -178,6 +180,8 @@ def validar_cliente(deal_id):
         cheques_sem_fundos = str(cheques_sem_fundos)
     if isinstance(status_aprovacao, float):
         status_aprovacao = str(status_aprovacao)
+    if isinstance(id_oportunidade, float):
+        id_oportunidade = str(id_oportunidade)
     if isinstance(score, float):
         score = str(score)
     if isinstance(comprovante_komunicar, float):
@@ -193,6 +197,8 @@ def validar_cliente(deal_id):
                                 f"Pendencias Internas: {pendencias_internas.upper() if pendencias_internas else '0'} "
                                 f"Protestos do Estado: {protestos_do_estado.upper() if protestos_do_estado else '0' } "
                                 f"Cheques sem fundos: {cheques_sem_fundos.upper() if cheques_sem_fundos else '0' } ",
+
+            "UF_CRM_1739199446": f"ID: {id_oportunidade}",
 
             "UF_CRM_1738270439": f"Status Aprovação: {status_aprovacao.upper()} "
                                 f": {score} ",
